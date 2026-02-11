@@ -8,29 +8,29 @@ import yfinance as yf
 from functools import lru_cache
 import logging
 
-# 配置日志
+# Logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key_for_session" # 用于 session 记忆
+app.secret_key = "super_secret_key_for_session" # For session memory
 
-# ⚠ 环境变量读取API密钥
+# ⚠ API Key from Environment Variable
 OPENAI_API_KEY = "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"
 if not OPENAI_API_KEY:
-    raise ValueError("请设置环境变量 OPENAI_API_KEY")
+    raise ValueError("Please set the OPENAI_API_KEY environment variable.")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ---- Constants ----
-DISCLAIMER = "⚠ **免责声明**: 我是AI原型，非持牌金融顾问。本报告仅供教育和研究目的，不构成投资建议。"
+DISCLAIMER = "⚠ **Disclaimer**: I am an AI prototype, not a licensed financial advisor. This report is for educational and research purposes only and does not constitute investment advice."
 
-# 简单的内存缓存
+# Simple In-Memory Cache
 _data_cache = {}
-CACHE_EXPIRY = 300  # 5分钟
+CACHE_EXPIRY = 300  # 5 minutes
 
-# ---- Memory Management (新功能: 记忆) ----
-# 在真实生产环境中，应该使用 Redis 或数据库存储历史记录
+# ---- Memory Management (New Feature: Context Memory) ----
+# In a production environment, use Redis or a database.
 class ConversationMemory:
     def __init__(self):
         self._memory = {} # {session_id: [{"role": "user", "content": ...}, ...]}
@@ -42,7 +42,7 @@ class ConversationMemory:
         if session_id not in self._memory:
             self._memory[session_id] = []
         self._memory[session_id].append({"role": role, "content": content})
-        # 限制历史长度，防止 token 爆炸
+        # Limit history length to prevent token explosion
         if len(self._memory[session_id]) > 10:
              self._memory[session_id] = self._memory[session_id][-10:]
 
@@ -52,32 +52,29 @@ memory_store = ConversationMemory()
 
 def search_ticker_symbol(query: str) -> str:
     """
-    如果用户输入的是公司名（如'Tesla'），尝试搜索对应的代码（'TSLA'）。
-    如果看起来像代码，直接返回。
+    If user enters a company name (e.g. 'Tesla'), try to find the symbol ('TSLA').
+    If it looks like a ticker, return it directly.
     """
     query = query.strip().upper()
     if not query:
         return ""
     
-    # 简单的直接返回逻辑，如果以后需要支持中文搜索，可以接入 yfinance 的 Ticker Search
-    # 或者调用 OpenAI 来做实体识别映射，这里为了速度使用 yfinance 的基础搜索
     try:
-        # 如果是纯字母且长度小于6，假设是代码
+        # If alphabetic and short, assume it's a ticker
         if query.isalpha() and len(query) <= 5:
             return query
         
-        # 否则尝试搜索 (yfinance 的 search 功能较弱，这里模拟一个简单的逻辑)
-        # 实际项目中建议使用专门的 Symbol Search API
+        # Otherwise try a simple search via yfinance
         t = yf.Ticker(query)
         if t.info and 'symbol' in t.info:
             return t.info['symbol']
     except:
         pass
     
-    return query # 默认返回原值尝试
+    return query # Default to returning original query
 
 def classify_intent_with_ai(user_text: str) -> str:
-    """AI 意图分类"""
+    """AI Intent Classification"""
     try:
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -94,9 +91,9 @@ def classify_intent_with_ai(user_text: str) -> str:
         return "general"
 
 def get_news_sentiment(ticker: str) -> Tuple[List[Dict], str]:
-    """获取新闻和简单情感分析"""
+    """Get news and simple sentiment analysis"""
     news_items = []
-    sentiment = "中性"
+    sentiment = "Neutral"
     try:
         stock = yf.Ticker(ticker)
         raw_news = stock.news
@@ -108,13 +105,13 @@ def get_news_sentiment(ticker: str) -> Tuple[List[Dict], str]:
                     'link': item.get('link', '#')
                 })
         
-        # 简单情感词匹配
+        # Simple sentiment keyword matching
         if news_items:
             text = " ".join([n['title'].lower() for n in news_items])
             if any(w in text for w in ['surge', 'jump', 'gain', 'profit', 'record']):
-                sentiment = "偏积极"
+                sentiment = "Positive"
             elif any(w in text for w in ['drop', 'fall', 'loss', 'miss', 'crash']):
-                sentiment = "偏消极"
+                sentiment = "Negative"
                 
     except Exception as e:
         logger.error(f"News error: {e}")
@@ -122,7 +119,7 @@ def get_news_sentiment(ticker: str) -> Tuple[List[Dict], str]:
     return news_items, sentiment
 
 def get_comprehensive_data(ticker: str) -> Optional[Dict]:
-    """获取综合股票数据 (带缓存)"""
+    """Get comprehensive stock data (with caching)"""
     if not ticker: return None
     
     cache_key = f"{ticker}_data"
@@ -136,18 +133,18 @@ def get_comprehensive_data(ticker: str) -> Optional[Dict]:
         fast_info = stock.fast_info
         price = fast_info.last_price
         
-        if price is None: return None # 代码无效
+        if price is None: return None # Invalid ticker
         
         info = {}
         try:
             info = stock.info
         except:
-            pass # info 获取经常超时，做容错
+            pass # info fetch often times out, fail gracefully
 
         news_items, sentiment = get_news_sentiment(ticker)
         
-        # 格式化新闻字符串供 Prompt 使用
-        news_str = "\n".join([f"- {n['title']} ({n['publisher']})" for n in news_items]) or "暂无新闻"
+        # Format news string for Prompt
+        news_str = "\n".join([f"- {n['title']} ({n['publisher']})" for n in news_items]) or "No recent news found."
 
         data = {
             "symbol": ticker.upper(),
@@ -158,10 +155,10 @@ def get_comprehensive_data(ticker: str) -> Optional[Dict]:
             "industry": info.get('industry', 'N/A'),
             "pe": info.get('trailingPE', 'N/A'),
             "market_cap": info.get('marketCap', 'N/A'),
-            "summary": info.get('longBusinessSummary', '暂无描述')[:500] + "...",
+            "summary": info.get('longBusinessSummary', 'No description available.')[:500] + "...",
             "news_str": news_str,
             "sentiment": sentiment,
-            "raw_news": news_items # 供前端展示链接用
+            "raw_news": news_items # For frontend display
         }
         
         _data_cache[cache_key] = (data, datetime.now())
@@ -172,36 +169,36 @@ def get_comprehensive_data(ticker: str) -> Optional[Dict]:
         return None
 
 def generate_ai_analysis(user_input: str, stock_data: Dict, intent: str, history: List[Dict]) -> str:
-    """生成 AI 回复，包含上下文记忆"""
+    """Generate AI response with context memory"""
     
-    # 构建对话历史字符串
+    # Build conversation history string
     history_str = ""
     for msg in history:
         role_name = "User" if msg['role'] == 'user' else "AI"
         history_str += f"{role_name}: {msg['content']}\n"
 
     system_prompt = f"""
-    你是一位专业的金融分析师助手。
+    You are a professional Financial Analyst Assistant.
     
-    ### 当前分析对象:
-    股票: {stock_data['name']} ({stock_data['symbol']})
-    价格: {stock_data['price']} ({stock_data['change_pct']})
-    行业: {stock_data['sector']}
+    ### Current Analysis Object:
+    Stock: {stock_data['name']} ({stock_data['symbol']})
+    Price: {stock_data['price']} ({stock_data['change_pct']})
+    Sector: {stock_data['sector']}
     
-    ### 关键数据:
-    PE: {stock_data['pe']}, 市值: {stock_data['market_cap']}
-    市场新闻情感: {stock_data['sentiment']}
-    新闻头条:
+    ### Key Data:
+    PE Ratio: {stock_data['pe']}, Market Cap: {stock_data['market_cap']}
+    Market Sentiment: {stock_data['sentiment']}
+    News Headlines:
     {stock_data['news_str']}
     
-    ### 任务:
-    回答用户的具体问题。如果是ADVICE意图，必须包含免责声明。
-    如果用户问的是上下文相关的问题（如"为什么下跌？"），请结合历史对话回答。
+    ### Task:
+    Answer the user's specific question. If the intent is ADVICE, you MUST include a disclaimer.
+    If the user asks context-dependent questions (e.g., "Why did it drop?"), answer based on the conversation history.
     
-    ### 历史对话上下文:
+    ### Conversation History Context:
     {history_str}
     
-    请用Markdown格式回复，保持专业、客观。不要每次都重复所有数据，只回答用户关心的问题。
+    Please reply in **English** using Markdown format. Keep it professional and objective. Do not repeat all data every time; answer only what the user cares about.
     """
     
     try:
@@ -215,7 +212,7 @@ def generate_ai_analysis(user_input: str, stock_data: Dict, intent: str, history
         )
         return completion.choices[0].message.content
     except Exception as e:
-        return f"AI 分析出错: {e}"
+        return f"AI Analysis Error: {e}"
 
 # ---- Routes ----
 
@@ -225,7 +222,7 @@ def index():
 
 @app.route("/api/market_pulse", methods=["GET"])
 def market_pulse():
-    # 简化的市场数据接口
+    # Simplified market data interface
     indices = [
         {"symbol": "^GSPC", "name": "S&P 500"},
         {"symbol": "^IXIC", "name": "Nasdaq"},
@@ -251,50 +248,49 @@ def market_pulse():
 @app.route("/api/chat", methods=["POST"])
 def chat_api():
     """
-    接收 JSON: { "ticker": "AAPL", "message": "风险如何？" }
+    Receives JSON: { "ticker": "AAPL", "message": "What are the risks?" }
     """
     data = request.json
     raw_ticker = data.get("ticker", "").strip()
     user_message = data.get("message", "").strip()
     
-    # 简单的 Session ID 模拟 (基于 IP，实际应基于 Cookie/Token)
+    # Simple Session ID (based on IP, use Cookie/Token in production)
     session_id = request.remote_addr 
     
     if not raw_ticker:
-        return jsonify({"response": "请先在上方输入框填写**股票代码**或**公司名称**。"})
+        return jsonify({"response": "Please enter a **Ticker Symbol** or **Company Name** in the top bar first."})
     
     if not user_message:
-        return jsonify({"response": "请输入您想询问的具体问题。"})
+        return jsonify({"response": "Please enter a specific question."})
 
-    # 1. 规范化 Ticker (如将 'Tesla' 转为 'TSLA')
+    # 1. Normalize Ticker (e.g. 'Tesla' -> 'TSLA')
     ticker = search_ticker_symbol(raw_ticker)
     
-    # 2. 获取数据
+    # 2. Get Data
     stock_data = get_comprehensive_data(ticker)
     if not stock_data:
-        return jsonify({"response": f"❌ 找不到股票 **{raw_ticker}** 的数据，请检查拼写或尝试输入标准代码（如 AAPL）。"})
+        return jsonify({"response": f"❌ Could not find data for **{raw_ticker}**. Please check spelling or try a standard symbol (e.g. AAPL)."})
 
-    # 3. 意图识别
+    # 3. Intent Recognition
     intent = classify_intent_with_ai(user_message)
     
-    # 4. 获取历史记忆
+    # 4. Get History
     history = memory_store.get_history(session_id)
     
-    # 5. 生成回复
+    # 5. Generate Response
     ai_response = generate_ai_analysis(user_message, stock_data, intent, history)
     
-    # 6. 更新记忆
-    # 保存当前的简要问答到历史，供下一轮使用
-    memory_store.add_message(session_id, "user", f"关于 {ticker}: {user_message}")
-    memory_store.add_message(session_id, "assistant", ai_response[:200] + "...") # 只存摘要防止上下文过长
+    # 6. Update Memory
+    memory_store.add_message(session_id, "user", f"About {ticker}: {user_message}")
+    memory_store.add_message(session_id, "assistant", ai_response[:200] + "...") # Store summary only
 
-    # 如果是建议类，强制加免责声明
+    # If advice intent, force disclaimer
     if intent == "advice":
         ai_response += f"\n\n---\n{DISCLAIMER}"
 
     return jsonify({
         "response": ai_response,
-        "ticker_display": f"{stock_data['name']} ({stock_data['symbol']})" # 用于前端更新标题
+        "ticker_display": f"{stock_data['name']} ({stock_data['symbol']})" # For frontend title update
     })
 
 if __name__ == "__main__":

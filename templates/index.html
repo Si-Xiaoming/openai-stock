@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock-Elf Pro</title>
+    <title>Stock-Elf</title>
     <style>
-        /* --- 变量定义 --- */
+        /* --- Variables --- */
         :root {
             --bg-color: #0f172a;
             --sidebar-bg: #1e293b;
@@ -27,7 +27,7 @@
             height: 100vh;
         }
 
-        /* --- 侧边栏 --- */
+        /* --- Sidebar --- */
         .sidebar {
             width: 260px;
             background-color: var(--sidebar-bg);
@@ -55,7 +55,7 @@
             margin-bottom: 10px;
         }
 
-        /* 市场卡片 */
+        /* Market Cards */
         .market-item {
             display: flex;
             justify-content: space-between;
@@ -68,7 +68,7 @@
         .text-green { color: #4ade80; }
         .text-red { color: #f87171; }
 
-        /* 快捷按钮 */
+        /* Quick Buttons */
         .quick-btn {
             width: 100%;
             text-align: left;
@@ -92,7 +92,7 @@
         }
         .icon { font-size: 1.1rem; }
 
-        /* --- 主区域 --- */
+        /* --- Main Area --- */
         .main {
             flex: 1;
             display: flex;
@@ -100,7 +100,7 @@
             position: relative;
         }
 
-        /* 顶部股票输入栏 */
+        /* Top Ticker Bar */
         .ticker-bar {
             padding: 15px 20px;
             background: var(--sidebar-bg);
@@ -144,7 +144,7 @@
             color: #94a3b8;
         }
 
-        /* 聊天窗口 */
+        /* Chat Window */
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -173,12 +173,12 @@
             border-bottom-right-radius: 2px;
         }
         
-        /* Markdown 样式微调 */
+        /* Markdown Styles */
         .msg-bot h1, .msg-bot h2 { color: var(--accent-color); margin-top: 10px; font-size: 1.1rem; }
         .msg-bot ul { padding-left: 20px; }
         .msg-bot strong { color: #fff; }
 
-        /* 底部输入区 */
+        /* Bottom Input Area */
         .input-area {
             padding: 20px;
             background: var(--sidebar-bg);
@@ -220,33 +220,33 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo">⚡ Stock-Elf Pro</div>
+        <div class="logo">⚡ Stock-Elf</div>
 
         <div>
             <div class="section-header">Market Pulse</div>
-            <div id="market-list">加载中...</div>
+            <div id="market-list">Loading...</div>
         </div>
 
         <div>
-            <div class="section-header">分析意图 (Quick Ask)</div>
+            <div class="section-header">Quick Ask (Intent)</div>
             <button class="quick-btn" onclick="sendQuickAsk('analysis')">
-                <span class="icon">📊</span> 深度分析报告
+                <span class="icon">📊</span> Deep Analysis Report
             </button>
             <button class="quick-btn" onclick="sendQuickAsk('risk')">
-                <span class="icon">🛡️</span> 风险评估
+                <span class="icon">🛡️</span> Risk Assessment
             </button>
             <button class="quick-btn" onclick="sendQuickAsk('advice')">
-                <span class="icon">💡</span> 投资建议参考
+                <span class="icon">💡</span> Investment Advice
             </button>
             <button class="quick-btn" onclick="sendQuickAsk('general')">
-                <span class="icon">🌐</span> 公司概况介绍
+                <span class="icon">🌐</span> Company Overview
             </button>
         </div>
         
         <div>
-            <div class="section-header">当前会话记忆</div>
+            <div class="section-header">Session Memory</div>
             <div style="font-size: 0.8rem; color: #64748b;">
-                AI 已记住您最近的对话上下文。切换股票代码将开启新话题。
+                AI remembers your recent conversation context. Switching the ticker will start a new topic.
             </div>
         </div>
     </div>
@@ -255,62 +255,61 @@
         <div class="ticker-bar">
             <div class="ticker-input-group">
                 <span class="ticker-label">STOCK:</span>
-                <input type="text" id="ticker-input" placeholder="代码/名称 (如 AAPL)" value="AAPL">
+                <input type="text" id="ticker-input" placeholder="Ticker/Name (e.g. AAPL)" value="AAPL">
             </div>
             <div class="current-status" id="status-text">
-                👈 请在此处输入目标股票
+                👈 Please enter target stock here
             </div>
         </div>
 
         <div class="chat-area" id="chat-box">
             <div class="message msg-bot">
-                你好！我是您的智能金融助手。<br>
-                请在左上角确认股票代码（默认为 AAPL），然后在下方输入您的问题。
+                Hello! I am your AI Financial Assistant.<br>
+                Please confirm the stock ticker at the top left (default is AAPL), then enter your question below.
             </div>
         </div>
 
         <div class="input-area">
-            <div id="loading">AI 正在分析数据与历史上下文...</div>
+            <div id="loading">AI is analyzing data and history context...</div>
             <div class="input-box">
-                <input type="text" id="msg-input" placeholder="输入具体问题，例如：最近为什么跌了？" onkeypress="handleEnter(event)">
-                <button class="send-btn" id="btn-send" onclick="sendUserMessage()">发送</button>
+                <input type="text" id="msg-input" placeholder="Type a specific question, e.g., Why did it drop recently?" onkeypress="handleEnter(event)">
+                <button class="send-btn" id="btn-send" onclick="sendUserMessage()">Send</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        // --- 核心逻辑 ---
+        // --- Core Logic ---
 
-        // 1. 发送快捷指令
+        // 1. Send Quick Command
         function sendQuickAsk(type) {
             const prompts = {
-                'analysis': '请为我生成一份详细的深度分析报告，包含基本面和技术面。',
-                'risk': '目前投资这只股票的主要风险是什么？是否安全？',
-                'advice': '现在的价格适合买入还是卖出？请给出分析依据。',
-                'general': '这家公司主要做什么？最近有什么大新闻？'
+                'analysis': 'Please generate a detailed deep analysis report for me, including fundamentals and technicals.',
+                'risk': 'What are the main risks of investing in this stock right now? Is it safe?',
+                'advice': 'Is the current price suitable for buying or selling? Please provide analysis basis.',
+                'general': 'What does this company mainly do? Any recent big news?'
             };
             const text = prompts[type];
             document.getElementById('msg-input').value = text;
             sendUserMessage();
         }
 
-        // 2. 发送消息主函数
+        // 2. Main Send Function
         async function sendUserMessage() {
             const ticker = document.getElementById('ticker-input').value.trim();
             const message = document.getElementById('msg-input').value.trim();
-            const chatBox = document.getElementById('chat-box');
             const loading = document.getElementById('loading');
             const btn = document.getElementById('btn-send');
 
             if (!ticker) {
-                alert("请先在顶部输入股票代码（例如 AAPL）");
+                alert("Please enter a stock ticker at the top first (e.g., AAPL)");
                 document.getElementById('ticker-input').focus();
                 return;
             }
             if (!message) return;
 
-            // UI 更新
+            // UI Update
             addMessage('user', message);
             document.getElementById('msg-input').value = '';
             loading.style.display = 'block';
@@ -324,16 +323,16 @@
                 });
                 const data = await res.json();
 
-                // 更新顶部状态栏
+                // Update Top Status Bar
                 if(data.ticker_display) {
-                    document.getElementById('status-text').innerText = `正在分析: ${data.ticker_display}`;
+                    document.getElementById('status-text').innerText = `Analyzing: ${data.ticker_display}`;
                 }
 
-                // 渲染回复
+                // Render Response
                 addMessage('bot', data.response);
 
             } catch (e) {
-                addMessage('bot', "❌ 连接服务器失败，请检查网络。");
+                addMessage('bot', "❌ Connection failed. Please check your network.");
             } finally {
                 loading.style.display = 'none';
                 btn.disabled = false;
@@ -344,7 +343,7 @@
             const chatBox = document.getElementById('chat-box');
             const div = document.createElement('div');
             div.className = `message msg-${role}`;
-            // 使用 marked 库渲染 Markdown
+            // Render Markdown using marked library
             div.innerHTML = role === 'bot' ? marked.parse(text) : text;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -354,7 +353,7 @@
             if (e.key === 'Enter') sendUserMessage();
         }
 
-        // 加载左侧市场数据
+        // Load Left Sidebar Market Data
         async function loadMarket() {
             const list = document.getElementById('market-list');
             try {
@@ -372,11 +371,11 @@
                         </div>`;
                 }).join('');
             } catch(e) {
-                list.innerText = "数据加载失败";
+                list.innerText = "Data Load Failed";
             }
         }
 
-        // 初始化
+        // Initialize
         loadMarket();
     </script>
 </body>
