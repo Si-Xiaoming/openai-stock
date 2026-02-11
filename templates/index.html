@@ -1,30 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock-Elf AI Analyst</title>
+    <title>Stock-Elf Pro</title>
     <style>
-
+        /* --- 变量定义 --- */
         :root {
-            --bg-color: #0f172a;       /* 深蓝背景 */
-            --sidebar-bg: #1e293b;     /* 侧边栏背景 */
-            --chat-bg: #1e293b;        /* 聊天窗口背景 */
-            --input-bg: #334155;       /* 输入框背景 */
-            --text-color: #f8fafc;     /* 主文本色 */
-            --accent-color: #3b82f6;   /* 强调色 (蓝色) */
-            --user-msg-bg: #2563eb;    /* 用户消息气泡 */
-            --bot-msg-bg: #334155;     /* 机器人消息气泡 */
-            
-         
-            --color-analysis: #8b5cf6; 
-            --color-risk: #f59e0b;     
-            --color-advice: #10b981;  
-            --color-general: #64748b;  
+            --bg-color: #0f172a;
+            --sidebar-bg: #1e293b;
+            --chat-bg: #0f172a;
+            --input-bg: #334155;
+            --text-color: #f8fafc;
+            --accent-color: #3b82f6;
+            --user-msg-bg: #2563eb;
+            --bot-msg-bg: #1e293b;
+            --border-color: #334155;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -32,483 +27,357 @@
             height: 100vh;
         }
 
-
+        /* --- 侧边栏 --- */
         .sidebar {
-            width: 280px;
+            width: 260px;
             background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             padding: 20px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #334155;
-            overflow-y: auto;
+            gap: 20px;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.4rem;
+            font-weight: 800;
             color: var(--accent-color);
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-section {
-            margin-bottom: 30px;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #94a3b8;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-      
-        .market-card {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-        .market-card:hover { background: rgba(255, 255, 255, 0.08); }
-
-        .market-name { font-weight: 500; color: #e2e8f0; }
-        .market-data { text-align: right; }
-        .market-price { font-size: 0.85rem; color: #cbd5e1; display: block; }
-        .market-change { font-size: 0.8rem; font-weight: bold; }
-        .text-green { color: #4ade80; }
-        .text-red { color: #f87171; }
-
-        
-        .prompt-btn {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            text-align: left;
-            background: transparent;
-            border: 1px solid #334155;
-            color: #cbd5e1;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .prompt-btn:hover {
-            background: #334155;
-            border-color: #475569;
-            color: white;
-            padding-left: 15px; 
-        }
-
-      
-        .prompt-btn::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-        }
-
-        .btn-analysis::before { background-color: var(--color-analysis); }
-        .btn-risk::before { background-color: var(--color-risk); }
-        .btn-advice::before { background-color: var(--color-advice); }
-        .btn-general::before { background-color: var(--color-general); }
-
-        
-        .history-item {
-            padding: 10px;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #334155;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .history-item:hover { 
-            color: white; 
-            background: rgba(255,255,255,0.05);
-            padding-left: 15px;
+
+        .section-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
 
-       
-        .main-content {
+        /* 市场卡片 */
+        .market-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .text-green { color: #4ade80; }
+        .text-red { color: #f87171; }
+
+        /* 快捷按钮 */
+        .quick-btn {
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .quick-btn:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        .icon { font-size: 1.1rem; }
+
+        /* --- 主区域 --- */
+        .main {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
+            position: relative;
         }
 
-        .chat-window {
+        /* 顶部股票输入栏 */
+        .ticker-bar {
+            padding: 15px 20px;
+            background: var(--sidebar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .ticker-input-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 5px 10px;
+            width: 300px;
+        }
+
+        .ticker-label {
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        #ticker-input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 100%;
+            outline: none;
+            text-transform: uppercase;
+        }
+        
+        .current-status {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* 聊天窗口 */
+        .chat-area {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: #475569 transparent;
+            gap: 20px;
         }
 
-        
         .message {
-            max-width: 85%;
-            padding: 15px 20px;
+            max-width: 80%;
+            padding: 15px;
             border-radius: 12px;
             line-height: 1.6;
             font-size: 0.95rem;
-            word-wrap: break-word;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .message.user {
+        .msg-bot {
+            align-self: flex-start;
+            background: var(--bot-msg-bg);
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+        .msg-user {
             align-self: flex-end;
-            background-color: var(--user-msg-bg);
+            background: var(--user-msg-bg);
             border-bottom-right-radius: 2px;
         }
+        
+        /* Markdown 样式微调 */
+        .msg-bot h1, .msg-bot h2 { color: var(--accent-color); margin-top: 10px; font-size: 1.1rem; }
+        .msg-bot ul { padding-left: 20px; }
+        .msg-bot strong { color: #fff; }
 
-        .message.bot {
-            align-self: flex-start;
-            background-color: var(--bot-msg-bg);
-            border-bottom-left-radius: 2px;
-          
-            white-space: pre-wrap; 
+        /* 底部输入区 */
+        .input-area {
+            padding: 20px;
+            background: var(--sidebar-bg);
+            border-top: 1px solid var(--border-color);
         }
 
-        
-        .message.bot strong { color: #e2e8f0; font-weight: 700; }
-        .message.bot h1, .message.bot h2, .message.bot h3 { 
-            margin-top: 15px; margin-bottom: 8px; color: var(--accent-color); 
-        }
-
-        
-        .input-group {
+        .input-box {
             display: flex;
             gap: 10px;
-            align-items: center;
-            background-color: var(--sidebar-bg);
-            padding: 15px;
+            background: var(--input-bg);
+            padding: 10px;
             border-radius: 12px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            border: 1px solid #334155;
         }
 
-       
-        .mic-btn {
-            background-color: #475569;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .mic-btn:hover { background-color: #64748b; transform: scale(1.05); }
-        .mic-btn.recording {
-            background-color: #ef4444;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .text-input-wrapper {
+        #msg-input {
             flex: 1;
-            display: flex;
-            gap: 10px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            background-color: var(--input-bg);
+            background: transparent;
             border: none;
             color: white;
-            padding: 12px;
-            border-radius: 8px;
-            outline: none;
             font-size: 1rem;
-            transition: background 0.2s;
+            outline: none;
         }
-        input[type="text"]:focus { background-color: #475569; }
 
-        button.send-btn {
-            background-color: var(--accent-color);
+        .send-btn {
+            background: var(--accent-color);
             color: white;
             border: none;
-            padding: 0 25px;
+            padding: 8px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.2s;
         }
+        .send-btn:disabled { background: #64748b; }
 
-        button.send-btn:hover { background-color: #2563eb; transform: translateY(-1px); }
-        button.send-btn:disabled { background-color: #64748b; cursor: not-allowed; transform: none; }
+        #loading { display: none; color: #94a3b8; font-size: 0.8rem; margin-bottom: 5px; margin-left: 10px;}
 
-        #typing-indicator {
-            display: none;
-            font-style: italic;
-            color: #94a3b8;
-            margin-left: 15px;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            animation: fadeIn 0.5s;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="logo">
-            <span>⚡</span> Stock-Elf
+        <div class="logo">⚡ Stock-Elf Pro</div>
+
+        <div>
+            <div class="section-header">Market Pulse</div>
+            <div id="market-list">加载中...</div>
         </div>
 
-        <div class="sidebar-section">
-            <div class="section-title">Market Pulse 🌐</div>
-            <div id="market-pulse-container">
-                <div style="color: gray; font-size: 0.8rem; padding: 5px;">Loading market data...</div>
-            </div>
-        </div>
-
-        <div class="sidebar-section">
-            <div class="section-title">Quick Actions 💡</div>
-            
-            <button class="prompt-btn btn-analysis" onclick="setInput('Detailed Analysis for NVDA')">
-                <span>📊 <b>Analysis:</b> Deep Dive NVDA</span>
+        <div>
+            <div class="section-header">分析意图 (Quick Ask)</div>
+            <button class="quick-btn" onclick="sendQuickAsk('analysis')">
+                <span class="icon">📊</span> 深度分析报告
             </button>
-            
-            <button class="prompt-btn btn-risk" onclick="setInput('What are the risks of TSLA?')">
-                <span>🛡️ <b>Risk:</b> Is TSLA Safe?</span>
+            <button class="quick-btn" onclick="sendQuickAsk('risk')">
+                <span class="icon">🛡️</span> 风险评估
             </button>
-
-            <button class="prompt-btn btn-advice" onclick="setInput('Should I buy AAPL now?')">
-                <span>💡 <b>Advice:</b> Buy/Sell AAPL?</span>
+            <button class="quick-btn" onclick="sendQuickAsk('advice')">
+                <span class="icon">💡</span> 投资建议参考
             </button>
-
-            <button class="prompt-btn btn-general" onclick="setInput('What does AMZN do?')">
-                <span>🌐 <b>General:</b> AMZN Overview</span>
+            <button class="quick-btn" onclick="sendQuickAsk('general')">
+                <span class="icon">🌐</span> 公司概况介绍
             </button>
         </div>
-
-        <div class="sidebar-section">
-            <div class="section-title">Recent History 🕒</div>
-            <div id="history-list">
-                </div>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="chat-window" id="chat-window">
-            <div class="message bot">
-                Hello! I am <b>Stock-Elf</b>, your AI financial analyst. 🧙‍♂️<br><br>
-                I can provide expert-level analysis based on real-time data.<br>
-                Try asking about <b>AAPL</b>, <b>TSLA</b>, or use the quick actions on the left.
-            </div>
-        </div>
-
-        <div id="typing-indicator">Stock-Elf is analyzing...</div>
-
-        <div class="input-group">
-            <button class="mic-btn" id="mic-btn" onclick="toggleRecording()" title="Click to Speak">
-                🎤
-            </button>
-            
-            <div class="text-input-wrapper">
-                <input type="text" id="user-input" placeholder="Type specific ticker (e.g. 'Analyze MSFT')..." onkeypress="handleKeyPress(event)">
-                <button class="send-btn" onclick="sendMessage()" id="send-btn">Send</button>
+        
+        <div>
+            <div class="section-header">当前会话记忆</div>
+            <div style="font-size: 0.8rem; color: #64748b;">
+                AI 已记住您最近的对话上下文。切换股票代码将开启新话题。
             </div>
         </div>
     </div>
 
+    <div class="main">
+        <div class="ticker-bar">
+            <div class="ticker-input-group">
+                <span class="ticker-label">STOCK:</span>
+                <input type="text" id="ticker-input" placeholder="代码/名称 (如 AAPL)" value="AAPL">
+            </div>
+            <div class="current-status" id="status-text">
+                👈 请在此处输入目标股票
+            </div>
+        </div>
+
+        <div class="chat-area" id="chat-box">
+            <div class="message msg-bot">
+                你好！我是您的智能金融助手。<br>
+                请在左上角确认股票代码（默认为 AAPL），然后在下方输入您的问题。
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div id="loading">AI 正在分析数据与历史上下文...</div>
+            <div class="input-box">
+                <input type="text" id="msg-input" placeholder="输入具体问题，例如：最近为什么跌了？" onkeypress="handleEnter(event)">
+                <button class="send-btn" id="btn-send" onclick="sendUserMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
+        // --- 核心逻辑 ---
 
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const micBtn = document.getElementById('mic-btn');
-        const typingIndicator = document.getElementById('typing-indicator');
-
-      
-        
-        function setInput(text) {
-            userInput.value = text;
-            userInput.focus();
-            sendMessage();
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') sendMessage();
-        }
-
-
-        function addMessage(text, sender) {
-            const div = document.createElement('div');
-            div.classList.add('message', sender);
-            
-      
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-            
-        
-            formattedText = formattedText.replace(/\n/g, '<br>');
-
-            div.innerHTML = formattedText;
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            userInput.value = '';
-            
-            
-            typingIndicator.style.display = 'block';
-            sendBtn.disabled = true;
-            userInput.disabled = true;
-
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-                
-                const data = await response.json();
-                addMessage(data.response, 'bot');
-                addToHistory(text);
-
-            } catch (error) {
-                console.error(error);
-                addMessage("⚠️ Connection Error: Unable to reach the Analyst Brain.", 'bot');
-            } finally {
-                typingIndicator.style.display = 'none';
-                sendBtn.disabled = false;
-                userInput.disabled = false;
-                userInput.focus();
-            }
-        }
-
-    
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition;
-        let isRecording = false;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US'; 
-            recognition.interimResults = false;
-
-            recognition.onstart = function() {
-                isRecording = true;
-                micBtn.classList.add('recording');
-                userInput.placeholder = "Listening...";
+        // 1. 发送快捷指令
+        function sendQuickAsk(type) {
+            const prompts = {
+                'analysis': '请为我生成一份详细的深度分析报告，包含基本面和技术面。',
+                'risk': '目前投资这只股票的主要风险是什么？是否安全？',
+                'advice': '现在的价格适合买入还是卖出？请给出分析依据。',
+                'general': '这家公司主要做什么？最近有什么大新闻？'
             };
-
-            recognition.onend = function() {
-                isRecording = false;
-                micBtn.classList.remove('recording');
-                userInput.placeholder = "Type specific ticker...";
-                if (userInput.value.trim().length > 0) sendMessage();
-            };
-
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                userInput.value = transcript;
-            };
-        } else {
-            micBtn.style.display = 'none';
+            const text = prompts[type];
+            document.getElementById('msg-input').value = text;
+            sendUserMessage();
         }
 
-        function toggleRecording() {
-            if (!recognition) {
-                alert("Voice input not supported (try Chrome).");
+        // 2. 发送消息主函数
+        async function sendUserMessage() {
+            const ticker = document.getElementById('ticker-input').value.trim();
+            const message = document.getElementById('msg-input').value.trim();
+            const chatBox = document.getElementById('chat-box');
+            const loading = document.getElementById('loading');
+            const btn = document.getElementById('btn-send');
+
+            if (!ticker) {
+                alert("请先在顶部输入股票代码（例如 AAPL）");
+                document.getElementById('ticker-input').focus();
                 return;
             }
-            isRecording ? recognition.stop() : recognition.start();
-        }
+            if (!message) return;
 
+            // UI 更新
+            addMessage('user', message);
+            document.getElementById('msg-input').value = '';
+            loading.style.display = 'block';
+            btn.disabled = true;
 
-
-        function addToHistory(text) {
-            const historyList = document.getElementById('history-list');
-            const match = text.match(/\b[A-Z]{2,5}\b/i);
-            if (!match) return;
-            
-            const ticker = match[0].toUpperCase();
-            
-            const existing = Array.from(historyList.children).map(c => c.getAttribute('data-ticker'));
-            if (existing.includes(ticker)) return;
-
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.setAttribute('data-ticker', ticker);
-            div.innerHTML = `<span>🕒</span> ${ticker}`;
-            div.onclick = () => setInput(`Analyze ${ticker}`);
-            historyList.prepend(div);
-        }
-
-        async function loadMarketPulse() {
             try {
-                const response = await fetch('/api/market_pulse');
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                
-                const container = document.getElementById('market-pulse-container');
-                container.innerHTML = ''; 
-
-                data.forEach(item => {
-                    const colorClass = item.change >= 0 ? 'text-green' : 'text-red';
-                    const arrow = item.change >= 0 ? '▲' : '▼';
-                    const html = `
-                        <div class="market-card">
-                            <span class="market-name">${item.name}</span>
-                            <div class="market-data">
-                                <span class="market-price">${item.price}</span>
-                                <span class="market-change ${colorClass}">${arrow} ${item.change_str}</span>
-                            </div>
-                        </div>`;
-                    container.innerHTML += html;
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ticker: ticker, message: message })
                 });
+                const data = await res.json();
+
+                // 更新顶部状态栏
+                if(data.ticker_display) {
+                    document.getElementById('status-text').innerText = `正在分析: ${data.ticker_display}`;
+                }
+
+                // 渲染回复
+                addMessage('bot', data.response);
+
             } catch (e) {
-                document.getElementById('market-pulse-container').innerHTML = 
-                    '<div style="font-size:0.8rem; color:#64748b">Market data unavailable</div>';
+                addMessage('bot', "❌ 连接服务器失败，请检查网络。");
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadMarketPulse);
+        function addMessage(role, text) {
+            const chatBox = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `message msg-${role}`;
+            // 使用 marked 库渲染 Markdown
+            div.innerHTML = role === 'bot' ? marked.parse(text) : text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendUserMessage();
+        }
+
+        // 加载左侧市场数据
+        async function loadMarket() {
+            const list = document.getElementById('market-list');
+            try {
+                const res = await fetch('/api/market_pulse');
+                const data = await res.json();
+                list.innerHTML = data.map(item => {
+                    const color = item.change >= 0 ? 'text-green' : 'text-red';
+                    return `
+                        <div class="market-item">
+                            <span>${item.name}</span>
+                            <div style="text-align:right">
+                                <div>${item.price}</div>
+                                <div class="${color}" style="font-size:0.8em">${item.change_str}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+            } catch(e) {
+                list.innerText = "数据加载失败";
+            }
+        }
+
+        // 初始化
+        loadMarket();
     </script>
 </body>
 </html>
