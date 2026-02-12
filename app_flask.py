@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.secret_key = "super_secret_key_for_session" # For session memory
 
 # ⚠ API Key from Environment Variable
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = ""
 if not OPENAI_API_KEY:
     raise ValueError("Please set the OPENAI_API_KEY environment variable.")
 
