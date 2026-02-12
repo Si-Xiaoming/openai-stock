@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock-Elf</title>
+    <title>Stock-Elf Pro</title>
     <style>
         /* --- Variables --- */
         :root {
@@ -191,6 +191,7 @@
             background: var(--input-bg);
             padding: 10px;
             border-radius: 12px;
+            align-items: center; /* 垂直居中 */
         }
 
         #msg-input {
@@ -213,6 +214,32 @@
         }
         .send-btn:disabled { background: #64748b; }
 
+        /* ★★★ 新增：麦克风按钮样式 ★★★ */
+        .mic-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mic-btn:hover { color: white; transform: scale(1.1); }
+        
+        /* 录音时的呼吸动画 */
+        .mic-btn.recording {
+            color: #ef4444; /* 红色 */
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         #loading { display: none; color: #94a3b8; font-size: 0.8rem; margin-bottom: 5px; margin-left: 10px;}
 
     </style>
@@ -220,7 +247,7 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo">⚡ Stock-Elf</div>
+        <div class="logo">⚡ Stock-Elf Pro</div>
 
         <div>
             <div class="section-header">Market Pulse</div>
@@ -272,7 +299,11 @@
         <div class="input-area">
             <div id="loading">AI is analyzing data and history context...</div>
             <div class="input-box">
-                <input type="text" id="msg-input" placeholder="Type a specific question, e.g., Why did it drop recently?" onkeypress="handleEnter(event)">
+                <button class="mic-btn" id="mic-btn" onclick="toggleRecording()" title="Voice Input">
+                    🎤
+                </button>
+                
+                <input type="text" id="msg-input" placeholder="Type specific question, or click Mic to speak..." onkeypress="handleEnter(event)">
                 <button class="send-btn" id="btn-send" onclick="sendUserMessage()">Send</button>
             </div>
         </div>
@@ -353,7 +384,65 @@
             if (e.key === 'Enter') sendUserMessage();
         }
 
-        // Load Left Sidebar Market Data
+        // --- 3. ★★★ 恢复语音功能 (Voice Input) ★★★ ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+        const micBtn = document.getElementById('mic-btn');
+        const userInput = document.getElementById('msg-input'); // 注意这里使用了新的 ID
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; // 说完一句自动停止
+            recognition.lang = 'en-US';     // 默认为英文，可改为 'zh-CN'
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                userInput.placeholder = "Listening... Speak now...";
+            };
+
+            recognition.onend = function() {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                userInput.placeholder = "Type specific question, or click Mic to speak...";
+                
+                // 自动发送逻辑：如果识别到了内容，直接发送
+                if (userInput.value.trim().length > 0) {
+                    sendUserMessage();
+                }
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Speech error:", event.error);
+                micBtn.classList.remove('recording');
+                userInput.placeholder = "Error accessing mic. Check permissions.";
+            };
+        } else {
+            // 浏览器不支持则隐藏按钮
+            if(micBtn) micBtn.style.display = 'none';
+            console.log("Web Speech API not supported.");
+        }
+
+        function toggleRecording() {
+            if (!recognition) {
+                alert("Voice input not supported in this browser (try Chrome/Edge).");
+                return;
+            }
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // --- 4. Load Market Data ---
         async function loadMarket() {
             const list = document.getElementById('market-list');
             try {

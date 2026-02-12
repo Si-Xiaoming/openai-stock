@@ -13,24 +13,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key_for_session" # For session memory
+app.secret_key = "super_secret_key_for_session"
 
-# ⚠ API Key from Environment Variable
-OPENAI_API_KEY = ""
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise ValueError("Please set the OPENAI_API_KEY environment variable.")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# ---- Constants ----
-DISCLAIMER = "⚠ **Disclaimer**: I am an AI prototype, not a licensed financial advisor. This report is for educational and research purposes only and does not constitute investment advice."
 
-# Simple In-Memory Cache
+DISCLAIMER = "**Disclaimer**: I am an AI prototype, not a licensed financial advisor. This report is for educational and research purposes only and does not constitute investment advice."
+
+
 _data_cache = {}
 CACHE_EXPIRY = 300  # 5 minutes
 
-# ---- Memory Management (New Feature: Context Memory) ----
-# In a production environment, use Redis or a database.
+# ---- Memory Management ----
+
 class ConversationMemory:
     def __init__(self):
         self._memory = {} # {session_id: [{"role": "user", "content": ...}, ...]}
@@ -48,7 +47,6 @@ class ConversationMemory:
 
 memory_store = ConversationMemory()
 
-# ---- Helper Functions ----
 
 def search_ticker_symbol(query: str) -> str:
     """
@@ -71,7 +69,7 @@ def search_ticker_symbol(query: str) -> str:
     except:
         pass
     
-    return query # Default to returning original query
+    return query
 
 def classify_intent_with_ai(user_text: str) -> str:
     """AI Intent Classification"""
@@ -222,7 +220,7 @@ def index():
 
 @app.route("/api/market_pulse", methods=["GET"])
 def market_pulse():
-    # Simplified market data interface
+    
     indices = [
         {"symbol": "^GSPC", "name": "S&P 500"},
         {"symbol": "^IXIC", "name": "Nasdaq"},
@@ -269,7 +267,7 @@ def chat_api():
     # 2. Get Data
     stock_data = get_comprehensive_data(ticker)
     if not stock_data:
-        return jsonify({"response": f"❌ Could not find data for **{raw_ticker}**. Please check spelling or try a standard symbol (e.g. AAPL)."})
+        return jsonify({"response": f"Could not find data for **{raw_ticker}**. Please check spelling or try a standard symbol (e.g. AAPL)."})
 
     # 3. Intent Recognition
     intent = classify_intent_with_ai(user_message)
@@ -282,7 +280,7 @@ def chat_api():
     
     # 6. Update Memory
     memory_store.add_message(session_id, "user", f"About {ticker}: {user_message}")
-    memory_store.add_message(session_id, "assistant", ai_response[:200] + "...") # Store summary only
+    memory_store.add_message(session_id, "assistant", ai_response[:200] + "...")
 
     # If advice intent, force disclaimer
     if intent == "advice":
@@ -290,7 +288,7 @@ def chat_api():
 
     return jsonify({
         "response": ai_response,
-        "ticker_display": f"{stock_data['name']} ({stock_data['symbol']})" # For frontend title update
+        "ticker_display": f"{stock_data['name']} ({stock_data['symbol']})"
     })
 
 if __name__ == "__main__":

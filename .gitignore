@@ -2,3 +2,4 @@
 /.gradio
 .DS_Store
 private-key
+start.bat
