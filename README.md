@@ -1,7 +1,3 @@
-## Requirements
-
-- Python 3.13+ (required by audioop-lts)
-
 # Sample of a ChatGPT-powered User Interface (in Python)
 
 This repository is an example for getting started with LLM-based chat user interfaces.
