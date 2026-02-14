@@ -19,6 +19,7 @@ export default function App() {
   const chatBoxRef = useRef(null);
   const recognitionRef = useRef(null);
 
+
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -27,25 +28,38 @@ export default function App() {
       recognition.lang = 'en-US';
       recognition.interimResults = false;
 
-      recognition.onstart = () => setIsRecording(true);
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+      
       recognition.onend = () => {
         setIsRecording(false);
-        if (inputValue.trim()) {
-          handleSendMessage();
-        }
+        // need to be checked by user
       };
+      
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         setInputValue(transcript);
       };
+      
       recognition.onerror = (event) => {
         console.error('Speech error:', event.error);
         setIsRecording(false);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please enable microphone permissions.');
+        }
       };
 
       recognitionRef.current = recognition;
     }
-  }, [inputValue]);
+    
+    // 清理函数
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []); // 空依赖数组，只在组件挂载时运行一次
 
   // 加载市场数据
   useEffect(() => {
@@ -213,11 +227,14 @@ export default function App() {
         {/* Input Area */}
         <div className="p-5 bg-slate-800 border-t border-slate-700">
           {loading && <div className="text-slate-400 text-sm mb-2 ml-2">AI is analyzing data...</div>}
+          {isRecording && <div className="text-red-400 text-sm mb-2 ml-2 flex items-center gap-2">
+            Listening... Speak your question
+          </div>}
           <div className="flex gap-3 bg-slate-700 p-3 rounded-xl items-center">
             <button
               onClick={toggleRecording}
               className={`mic-btn ${isRecording ? 'recording' : ''}`}
-              title="Voice Input"
+              title={isRecording ? "Stop Recording" : "Voice Input (Click to speak)"}
             >
               <Mic size={20} />
             </button>
@@ -225,13 +242,14 @@ export default function App() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSendMessage()}
               className="flex-1 bg-transparent border-none text-white outline-none"
-              placeholder={isRecording ? "Listening... Speak now..." : "Type specific question, or click Mic to speak..."}
+              placeholder={isRecording ? "Listening..." : "Type your question or click 🎤 to speak..."}
+              disabled={isRecording}
             />
             <button
               onClick={() => handleSendMessage()}
-              disabled={loading}
+              disabled={loading || isRecording}
               className="send-btn"
             >
               <Send size={18} />
