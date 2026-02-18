@@ -44,7 +44,7 @@ The client will start on `http://localhost:3000`.
 
 ## Quick Start
 
-You can also write a simple script to run both the server and the client at the same time. Create a file named `start.ba` (if you work on Windows) in the root directory of the project with the following content:
+You can also write a simple script to run both the server and the client at the same time. Create a file named `start.bat` (if you work on Windows) in the root directory of the project with the following content:
 
 ```bash
 set OPENAI_API_KEY=your_openai_api_key_here
